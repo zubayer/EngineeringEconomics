@@ -1,0 +1,1407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>IE 5324 Homework 5 — Step-by-Step Interactive Learning Studio</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    body {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      background-color: #f8fafc;
+      color: #0f172a;
+    }
+    .step-pill::-webkit-scrollbar {
+      display: none;
+    }
+    .step-pill {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+    .fade-in {
+      animation: fadeIn 0.22s ease-out;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .math-chip {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+  <!-- Top Navigation & Progress Header -->
+  <header class="sticky top-0 z-30 bg-white/95 backdrop-blur border-b border-slate-200">
+    <div class="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
+      <div class="flex items-center gap-2.5 min-w-0">
+        <div class="w-9 h-9 rounded-xl bg-indigo-600 text-white flex items-center justify-center shrink-0 shadow-sm">
+          <i data-lucide="graduation-cap" class="w-5 h-5"></i>
+        </div>
+        <div class="min-w-0">
+          <h1 class="text-sm sm:text-base font-bold text-slate-900 truncate">IE 5324 HW5 Learning Studio</h1>
+          <p class="text-xs text-slate-500 truncate">Zero-Basics Mode · Low Mental Load · Step-by-Step</p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2 shrink-0">
+        <div class="hidden sm:flex items-center gap-2 bg-slate-100 px-3 py-1.5 rounded-full text-xs font-semibold text-slate-700">
+          <i data-lucide="trophy" class="w-3.5 h-3.5 text-amber-500"></i>
+          <span id="progressText">0 / 9 Mastered</span>
+        </div>
+        <button id="openCheatSheetBtn" type="button" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 text-xs font-semibold transition">
+          <i data-lucide="zap" class="w-3.5 h-3.5"></i>
+          <span>60-Sec Cheat Sheet</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Thin progress bar -->
+    <div class="w-full h-1.5 bg-slate-100">
+      <div id="progressBar" class="h-full bg-indigo-600 transition-all duration-300" style="width: 11%"></div>
+    </div>
+
+    <!-- Horizontal Sequential Stepper -->
+    <div class="max-w-5xl mx-auto px-4 py-2.5">
+      <div id="stepNav" class="step-pill flex items-center gap-1.5 overflow-x-auto pb-0.5">
+        <!-- Populated by JS -->
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Focused Learning Canvas -->
+  <main class="flex-1 max-w-5xl w-full mx-auto px-4 py-6">
+    <div id="lessonContainer" class="fade-in">
+      <!-- Active lesson renders here -->
+    </div>
+
+    <!-- Bottom Sequential Navigation -->
+    <div class="mt-8 pt-5 border-t border-slate-200 flex items-center justify-between gap-3">
+      <button id="prevBtn" type="button" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 text-sm font-semibold transition disabled:opacity-40 disabled:cursor-not-allowed">
+        <i data-lucide="arrow-left" class="w-4 h-4"></i>
+        <span>Previous</span>
+      </button>
+
+      <button id="markCompleteBtn" type="button" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold shadow-sm transition">
+        <i data-lucide="check-circle-2" class="w-4 h-4"></i>
+        <span id="markCompleteLabel">Mark Step Understood</span>
+      </button>
+
+      <button id="nextBtn" type="button" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold shadow-sm transition disabled:opacity-40 disabled:cursor-not-allowed">
+        <span>Next Step</span>
+        <i data-lucide="arrow-right" class="w-4 h-4"></i>
+      </button>
+    </div>
+  </main>
+
+  <!-- 60-Second Cheat Sheet Modal -->
+  <div id="cheatSheetModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-3xl w-full max-h-[88vh] flex flex-col overflow-hidden border border-slate-200">
+      <div class="px-5 py-4 border-b border-slate-200 flex items-center justify-between bg-amber-50/70">
+        <div class="flex items-center gap-2">
+          <i data-lucide="zap" class="w-5 h-5 text-amber-600"></i>
+          <h2 class="text-base font-bold text-slate-900">60-Second Homework 5 Cheat Sheet</h2>
+        </div>
+        <button id="closeCheatSheetBtn" type="button" class="p-1.5 rounded-lg hover:bg-amber-100 text-slate-600 transition" aria-label="Close">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+      <div class="p-5 overflow-y-auto space-y-4 text-sm">
+        <div class="p-3.5 rounded-xl bg-indigo-50 border border-indigo-100 text-indigo-950">
+          <p class="font-semibold mb-1">Handwritten Submission Pattern (from the Last Answer)</p>
+          <p class="text-xs sm:text-sm leading-relaxed">
+            For every question, write in this exact 7-step order:
+            <strong>1. Given</strong> &rarr; <strong>2. Formula</strong> &rarr; <strong>3. Newnan Factors</strong> &rarr; <strong>4. Plug-in Numbers</strong> &rarr; <strong>5. Intermediate Math</strong> &rarr; <strong>6. Boxed Final Answer</strong> &rarr; <strong>7. One-Sentence Decision</strong>.
+          </p>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div class="p-3 rounded-xl border border-slate-200 bg-slate-50">
+            <div class="font-bold text-slate-900">Q1: Economic Life (Robot)</div>
+            <div class="text-xs text-slate-600 mt-0.5">Find the year with the lowest annual cost (EUAC).</div>
+            <div class="math-chip text-xs text-indigo-700 mt-1.5">Min EUAC = $12,546.82/yr at Year 4</div>
+          </div>
+          <div class="p-3 rounded-xl border border-slate-200 bg-slate-50">
+            <div class="font-bold text-slate-900">Q2: Replacement (Crane)</div>
+            <div class="text-xs text-slate-600 mt-0.5">Ignore sunk $180k! Replace when MC &gt; $38,000.</div>
+            <div class="math-chip text-xs text-indigo-700 mt-1.5">MC4 = $39,200 &gt; $38k &rarr; Replace end of Yr 3</div>
+          </div>
+          <div class="p-3 rounded-xl border border-slate-200 bg-slate-50">
+            <div class="font-bold text-slate-900">Q3: Real Interest Rate</div>
+            <div class="text-xs text-slate-600 mt-0.5">Remove inflation with Fisher: (1+i)/(1+f) &minus; 1.</div>
+            <div class="math-chip text-xs text-indigo-700 mt-1.5">i' = 1.0775 / 1.0255 &minus; 1 = 5.07%</div>
+          </div>
+          <div class="p-3 rounded-xl border border-slate-200 bg-slate-50">
+            <div class="font-bold text-slate-900">Q4: Inflation + MACRS + Tax</div>
+            <div class="text-xs text-slate-600 mt-0.5">Inflate &rarr; Subtract MACRS &rarr; Tax 28% &rarr; Deflate &rarr; Discount 15%.</div>
+            <div class="math-chip text-xs text-indigo-700 mt-1.5">NPW = +$15,952.22 &gt; 0 &rarr; Buy Device</div>
+          </div>
+          <div class="p-3 rounded-xl border border-slate-200 bg-slate-50">
+            <div class="font-bold text-slate-900">Q5: Capital Budgeting ($1.8M)</div>
+            <div class="text-xs text-slate-600 mt-0.5">Rank by IRR high-to-low until $1.8M is full.</div>
+            <div class="math-chip text-xs text-indigo-700 mt-1.5">Fund D, G, E, F, C | Best excluded: H (15.10%)</div>
+          </div>
+          <div class="p-3 rounded-xl border border-slate-200 bg-slate-50">
+            <div class="font-bold text-slate-900">Q6: University WACC</div>
+            <div class="text-xs text-slate-600 mt-0.5">Exclude taxpayer $120M. State weighting assumption!</div>
+            <div class="math-chip text-xs text-indigo-700 mt-1.5">4.77% (interest weight) or 5.83% (principal)</div>
+          </div>
+          <div class="p-3 rounded-xl border border-slate-200 bg-slate-50">
+            <div class="font-bold text-slate-900">Q7: Incremental B/C Ratio</div>
+            <div class="text-xs text-slate-600 mt-0.5">Order B &rarr; A &rarr; C. Upgrade only if &Delta;B/C &ge; 1.</div>
+            <div class="math-chip text-xs text-indigo-700 mt-1.5">B&rarr;A: 1.058 (Yes) | A&rarr;C: 0.849 (No) &rarr; Pick A</div>
+          </div>
+          <div class="p-3 rounded-xl border border-slate-200 bg-slate-50">
+            <div class="font-bold text-slate-900">Q8: Liquidity Ratios</div>
+            <div class="text-xs text-slate-600 mt-0.5">CA = $347k, CL = $215k, Quick = $275k.</div>
+            <div class="math-chip text-xs text-indigo-700 mt-1.5">Current 1.61 | Quick 1.28 | WC $132,000</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // =========================================================
+    // GROUNDED DATA FROM IE 5324 HOMEWORK 5 (PROF. FAN BU)
+    // =========================================================
+    const Q1_DATA = [
+      { n: 1, sv: 32000.00, euac: 13200.00, ap: 1.080000, af: 1.000000, ag: 0.000000 },
+      { n: 2, sv: 25600.00, euac: 12844.23, ap: 0.560769, af: 0.480769, ag: 0.480769 },
+      { n: 3, sv: 20480.00, euac: 12635.93, ap: 0.388034, af: 0.308034, ag: 0.948742 },
+      { n: 4, sv: 16384.00, euac: 12546.82, ap: 0.301921, af: 0.221921, ag: 1.403960 },
+      { n: 5, sv: 13107.20, euac: 12553.76, ap: 0.250456, af: 0.170456, ag: 1.846472 },
+      { n: 6, sv: 10485.76, euac: 12637.76, ap: 0.216315, af: 0.136315, ag: 2.276346 },
+      { n: 7, sv: 8388.61,  euac: 12783.26, ap: 0.192072, af: 0.112072, ag: 2.693664 },
+      { n: 8, sv: 6710.89,  euac: 12977.45, ap: 0.174015, af: 0.094015, ag: 3.098524 },
+      { n: 9, sv: 5368.71,  euac: 13209.81, ap: 0.160080, af: 0.080080, ag: 3.491038 },
+      { n: 10, sv: 4294.97, euac: 13471.67, ap: 0.149029, af: 0.069029, ag: 3.871328 }
+    ];
+
+    const Q2_DATA = [
+      { year: 1, mvPrev: 60000, mvCurr: 50000, om: 17000, mc: 34200, action: 'Keep', reason: '$34,200 is cheaper than the new crane ($38,000).' },
+      { year: 2, mvPrev: 50000, mvCurr: 42000, om: 20000, mc: 34000, action: 'Keep', reason: '$34,000 is still cheaper than the new crane ($38,000).' },
+      { year: 3, mvPrev: 42000, mvCurr: 35000, om: 25000, mc: 37040, action: 'Keep', reason: '$37,040 is just under $38,000 — keep it through Year 3!' },
+      { year: 4, mvPrev: 35000, mvCurr: 30000, om: 30000, mc: 39200, action: 'Replace', reason: '$39,200 is MORE than $38,000 — replace BEFORE Year 4 starts (end of Year 3)!' },
+      { year: 5, mvPrev: 30000, mvCurr: 24000, om: 35000, mc: 44600, action: 'Replace', reason: '$44,600 is way over $38,000 — replacement is already overdue.' }
+    ];
+
+    const Q4_DATA = [
+      { t: 0, baseB: 0, macrsPct: 0, macrsD: 0, actualB: 0, actualATCF: -10000, y0ATCF: -10000, pw: -10000 },
+      { t: 1, baseB: 2500, macrsPct: 20.00, macrsD: 2000, actualB: 2675, actualATCF: 2486, y0ATCF: 2323, pw: 2020 },
+      { t: 2, baseB: 3750, macrsPct: 32.00, macrsD: 3200, actualB: 4293, actualATCF: 3987, y0ATCF: 3483, pw: 2633 },
+      { t: 3, baseB: 5000, macrsPct: 19.20, macrsD: 1920, actualB: 6125, actualATCF: 4948, y0ATCF: 4039, pw: 2656 },
+      { t: 4, baseB: 6250, macrsPct: 11.52, macrsD: 1152, actualB: 8192, actualATCF: 6221, y0ATCF: 4746, pw: 2714 },
+      { t: 5, baseB: 7500, macrsPct: 11.52, macrsD: 1152, actualB: 10519, actualATCF: 7896, y0ATCF: 5630, pw: 2799 },
+      { t: 6, baseB: 8750, macrsPct: 5.76,  macrsD: 576,  actualB: 13131, actualATCF: 9616, y0ATCF: 6407, pw: 2770 },
+      { t: 7, baseB: 10000, macrsPct: 0,    macrsD: 0,    actualB: 16058, actualATCF: 11562, y0ATCF: 7200, pw: 2707 },
+      { t: 8, baseB: 11250, macrsPct: 0,    macrsD: 0,    actualB: 19330, actualATCF: 13917, y0ATCF: 8100, pw: 2648 },
+      { t: 9, baseB: 12500, macrsPct: 0,    macrsD: 0,    actualB: 22981, actualATCF: 16546, y0ATCF: 9000, pw: 2558 },
+      { t: 10, baseB: 13750, macrsPct: 0,   macrsD: 0,    actualB: 27048, actualATCF: 19475, y0ATCF: 9900, pw: 2447 }
+    ];
+
+    const Q5_PROJECTS = [
+      { id: 'D', cost: 250000, irr: 22.03, hw5Pick: true },
+      { id: 'G', cost: 350000, irr: 20.53, hw5Pick: true },
+      { id: 'E', cost: 400000, irr: 16.50, hw5Pick: true },
+      { id: 'F', cost: 500000, irr: 15.81, hw5Pick: true },
+      { id: 'H', cost: 600000, irr: 15.10, hw5Pick: false },
+      { id: 'I', cost: 750000, irr: 14.57, hw5Pick: false },
+      { id: 'B', cost: 200000, irr: 13.82, hw5Pick: false },
+      { id: 'C', cost: 300000, irr: 13.82, hw5Pick: true },
+      { id: 'A', cost: 150000, irr: 12.38, hw5Pick: false }
+    ];
+
+    const Q8_ITEMS = [
+      { id: 'cash', name: 'Cash', amount: 80000, type: 'CA', quick: true, note: 'Already pure cash — counts in both Current & Quick.' },
+      { id: 'ar', name: 'Accounts Receivable', amount: 120000, type: 'CA', quick: true, note: 'Money customers owe you soon — counts in both Current & Quick.' },
+      { id: 'sec', name: 'Marketable Securities', amount: 75000, type: 'CA', quick: true, note: 'Easy to sell for cash fast — counts in both Current & Quick.' },
+      { id: 'inv', name: 'Parts Inventory', amount: 42000, type: 'CA', quick: false, note: 'Current Asset, but NOT Quick (hard to turn spare parts into instant cash).' },
+      { id: 'prep', name: 'Prepaid Expenses', amount: 30000, type: 'CA', quick: false, note: 'Current Asset, but NOT Quick (already paid in advance, cannot pay new bills).' },
+      { id: 'ap', name: 'Accounts Payable', amount: 200000, type: 'CL', quick: false, note: 'Short-term bills you owe suppliers.' },
+      { id: 'accr', name: 'Accrued Expenses', amount: 15000, type: 'CL', quick: false, note: 'Short-term unpaid expenses like wages or utilities.' }
+    ];
+
+    const LESSONS = [
+      { id: 0, short: 'Start', title: 'Big Picture & What the Last Answer Does', tag: 'Overview' },
+      { id: 1, short: 'Q1', title: 'Robot Economic Life & Min EUAC', tag: 'Lecture 12' },
+      { id: 2, short: 'Q2', title: 'Crane Replacement & Sunk Cost Trap', tag: 'Lecture 12' },
+      { id: 3, short: 'Q3', title: 'Real Interest Rate (Removing Inflation)', tag: 'Lecture 13' },
+      { id: 4, short: 'Q4', title: 'Inflation + MACRS Tax Shield + NPW', tag: 'Lectures 11 & 13' },
+      { id: 5, short: 'Q5', title: 'Capital Budgeting ($1.8M) & Opportunity Cost', tag: 'Capital Budgeting' },
+      { id: 6, short: 'Q6', title: 'University WACC & Weighting Assumptions', tag: 'Cost of Capital' },
+      { id: 7, short: 'Q7', title: 'Incremental Benefit/Cost Ratio (ΔB/C)', tag: 'B/C Analysis' },
+      { id: 8, short: 'Q8', title: 'Current Ratio, Quick Ratio & Working Capital', tag: 'Financial Ratios' }
+    ];
+
+    // =========================================================
+    // STATE MANAGEMENT
+    // =========================================================
+    const state = {
+      activeStep: 0,
+      completed: new Set(),
+      quizAnswered: {},
+      // Interactive states
+      q1Year: 4,
+      q2ShowSunkTrap: false,
+      q2Guesses: {},
+      q3MarketRate: 7.75,
+      q3Inflation: 2.55,
+      q4Year: 1,
+      q4AltAssumption: false,
+      q5Selected: new Set(['D', 'G', 'E', 'F', 'C']),
+      q6Mode: 'interest', // 'interest' (4.77%) or 'principal' (5.83%)
+      q7Round: 1, // 1 = B vs A, 2 = A vs C
+      q8Mode: 'quick' // 'current' or 'quick'
+    };
+
+    try {
+      const saved = localStorage.getItem('ie5324_hw5_completed');
+      if (saved) {
+        JSON.parse(saved).forEach(id => state.completed.add(id));
+      }
+    } catch (e) {}
+
+    function saveProgress() {
+      try {
+        localStorage.setItem('ie5324_hw5_completed', JSON.stringify(Array.from(state.completed)));
+      } catch (e) {}
+    }
+
+    let activeChart = null;
+    function destroyChart() {
+      if (activeChart) {
+        activeChart.destroy();
+        activeChart = null;
+      }
+    }
+
+    function fmtMoney(val, decimals = 0) {
+      const sign = val < 0 ? '-' : '';
+      return sign + '$' + Math.abs(val).toLocaleString('en-US', {
+        minimumFractionDigits: decimals,
+        maximumFractionDigits: decimals
+      });
+    }
+
+    // =========================================================
+    // RENDER STEPPER & HEADER
+    // =========================================================
+    function renderHeader() {
+      const count = state.completed.size;
+      document.getElementById('progressText').textContent = `${count} / ${LESSONS.length} Mastered`;
+      const pct = Math.max(11, Math.round(((state.activeStep + 1) / LESSONS.length) * 100));
+      document.getElementById('progressBar').style.width = `${pct}%`;
+
+      const nav = document.getElementById('stepNav');
+      nav.innerHTML = LESSONS.map((l, idx) => {
+        const isActive = idx === state.activeStep;
+        const isDone = state.completed.has(idx);
+        let cls = 'bg-slate-100 text-slate-600 hover:bg-slate-200';
+        if (isActive) cls = 'bg-indigo-600 text-white shadow-sm';
+        else if (isDone) cls = 'bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100';
+
+        return `
+          <button type="button" data-step="${idx}" class="step-btn shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition ${cls}">
+            ${isDone && !isActive ? '<i data-lucide="check" class="w-3.5 h-3.5"></i>' : ''}
+            <span>${l.short}</span>
+          </button>
+        `;
+      }).join('');
+
+      nav.querySelectorAll('.step-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          state.activeStep = Number(btn.dataset.step);
+          renderAll();
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+      });
+
+      document.getElementById('prevBtn').disabled = state.activeStep === 0;
+      document.getElementById('nextBtn').disabled = state.activeStep === LESSONS.length - 1;
+
+      const isDone = state.completed.has(state.activeStep);
+      const markBtn = document.getElementById('markCompleteBtn');
+      const markLbl = document.getElementById('markCompleteLabel');
+      if (isDone) {
+        markBtn.className = 'inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-100 hover:bg-emerald-200 text-emerald-800 border border-emerald-300 text-sm font-semibold transition';
+        markLbl.textContent = 'Understood! (Click to Undo)';
+      } else {
+        markBtn.className = 'inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold shadow-sm transition';
+        markLbl.textContent = 'Mark Step Understood';
+      }
+    }
+
+    // =========================================================
+    // REUSABLE MINI-QUIZ COMPONENT
+    // =========================================================
+    function buildQuizHTML(quizId, question, options, correctIdx, explanation) {
+      const picked = state.quizAnswered[quizId];
+      const hasPicked = picked !== undefined;
+      return `
+        <div class="mt-6 rounded-2xl border border-indigo-100 bg-indigo-50/60 p-4 sm:p-5">
+          <div class="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-indigo-700 mb-2">
+            <i data-lucide="sparkles" class="w-4 h-4"></i>
+            <span>10-Second Sanity Check</span>
+          </div>
+          <p class="text-sm font-semibold text-slate-900 mb-3">${question}</p>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            ${options.map((opt, i) => {
+              let btnCls = 'bg-white border-slate-200 hover:border-indigo-400 text-slate-800';
+              if (hasPicked) {
+                if (i === correctIdx) btnCls = 'bg-emerald-50 border-emerald-500 text-emerald-900 ring-1 ring-emerald-500';
+                else if (i === picked) btnCls = 'bg-rose-50 border-rose-400 text-rose-900';
+                else btnCls = 'bg-white/60 border-slate-200 text-slate-400';
+              }
+              return `
+                <button type="button" data-quiz="${quizId}" data-opt="${i}" class="quiz-opt text-left px-3.5 py-2.5 rounded-xl border text-xs sm:text-sm font-medium transition ${btnCls}">
+                  ${opt}
+                </button>
+              `;
+            }).join('')}
+          </div>
+          ${hasPicked ? `
+            <div class="mt-3 p-3 rounded-xl text-xs sm:text-sm ${picked === correctIdx ? 'bg-emerald-100/80 text-emerald-950' : 'bg-amber-100/80 text-amber-950'}">
+              <strong>${picked === correctIdx ? 'Spot on!' : 'Close — here is why:'}</strong> ${explanation}
+            </div>
+          ` : ''}
+        </div>
+      `;
+    }
+
+    function bindQuizListeners() {
+      document.querySelectorAll('.quiz-opt').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const qid = btn.dataset.quiz;
+          const opt = Number(btn.dataset.opt);
+          state.quizAnswered[qid] = opt;
+          renderLesson();
+        });
+      });
+    }
+
+    // =========================================================
+    // LESSON 0: BIG PICTURE & WHAT THE LAST ANSWER IS DOING
+    // =========================================================
+    function renderStep0() {
+      return `
+        <div class="space-y-5">
+          <div class="bg-white rounded-2xl border border-slate-200 p-5 sm:p-6 shadow-sm">
+            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-indigo-50 text-indigo-700 text-xs font-bold mb-3">
+              Start Here · Zero Basics Required
+            </span>
+            <h2 class="text-xl sm:text-2xl font-extrabold text-slate-900">What Is This Homework & What Is the "Last Answer" Doing?</h2>
+            <p class="mt-2 text-sm sm:text-base text-slate-600 leading-relaxed">
+              This is <strong>IE 5324 Homework 5</strong> (Engineering Economics). Every single question asks one practical money question:
+              <em>"Is this machine, project, or business decision worth our money once we account for time, interest, inflation, and taxes?"</em>
+            </p>
+          </div>
+
+          <!-- Plain English explanation of the Last Answer -->
+          <div class="bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl border border-amber-200 p-5 sm:p-6 shadow-sm">
+            <div class="flex items-center gap-2 text-amber-900 font-bold text-base mb-3">
+              <i data-lucide="search-check" class="w-5 h-5 text-amber-600"></i>
+              <span>What the Last Answer (Response 2 in Your ChatGPT Link) Is Actually Doing</span>
+            </div>
+            <p class="text-sm text-slate-700 leading-relaxed mb-4">
+              In your shared link, you gave ChatGPT a <strong>second</strong> set of Homework 5 solutions and asked it to compare both versions and turn them into a clean handwritten submission. Think of Response 2 like a <strong>Teaching Assistant (TA) double-checking your homework before you turn it in</strong>. It does 3 specific jobs:
+            </p>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <div class="bg-white/90 rounded-xl p-4 border border-amber-200/80">
+                <div class="text-xs font-bold uppercase text-amber-700 mb-1">Job 1 · Agreement Audit</div>
+                <p class="text-xs sm:text-sm text-slate-700 leading-relaxed">
+                  It confirms that <strong>Q1, Q2, Q3, Q7, and Q8</strong> are 100% identical and safe. No ambiguity there!
+                </p>
+              </div>
+              <div class="bg-white/90 rounded-xl p-4 border border-amber-200/80">
+                <div class="text-xs font-bold uppercase text-amber-700 mb-1">Job 2 · Warning Flags (Q4, Q5, Q6)</div>
+                <p class="text-xs sm:text-sm text-slate-700 leading-relaxed">
+                  It warns you that <strong>Q4, Q5, and Q6</strong> depend on an assumption (inflation base year in Q4, IRR-ranking caveat in Q5, and endowment weight in Q6). Stating your assumption protects your grade!
+                </p>
+              </div>
+              <div class="bg-white/90 rounded-xl p-4 border border-amber-200/80">
+                <div class="text-xs font-bold uppercase text-amber-700 mb-1">Job 3 · Handwritten Template</div>
+                <p class="text-xs sm:text-sm text-slate-700 leading-relaxed">
+                  It organizes every answer into a neat 7-step handwritten layout: <em>Given &rarr; Equation &rarr; Newnan Factor &rarr; Plug-in &rarr; Math &rarr; Boxed Answer &rarr; 1-Line Decision</em>.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- 3-Concept Starter Kit (No Jargon!) -->
+          <div class="bg-white rounded-2xl border border-slate-200 p-5 sm:p-6 shadow-sm">
+            <h3 class="text-base font-bold text-slate-900 mb-1">The Only 3 "Basics" You Need Before Starting Q1</h3>
+            <p class="text-xs sm:text-sm text-slate-500 mb-4">If you understand these 3 everyday ideas, the rest of Homework 5 will click immediately.</p>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div class="p-4 rounded-xl bg-slate-50 border border-slate-200">
+                <div class="font-bold text-indigo-700 text-sm mb-1">1. MARR (i) = Your "Minimum Bar"</div>
+                <p class="text-xs text-slate-600 leading-relaxed">
+                  Stands for <em>Minimum Attractive Rate of Return</em>. Think of it as your minimum acceptable interest rate (like 8%, 10%, or 12%) to say "yes" to spending money.
+                </p>
+              </div>
+              <div class="p-4 rounded-xl bg-slate-50 border border-slate-200">
+                <div class="font-bold text-indigo-700 text-sm mb-1">2. Newnan Factors like (A/P, i, n)</div>
+                <p class="text-xs text-slate-600 leading-relaxed">
+                  Just lookup multipliers from the back of the textbook! Read the slash as <strong>"Find / Given"</strong>: <span class="math-chip font-semibold">(A/P)</span> turns a <strong>P</strong>resent lump sum into an <strong>A</strong>nnual payment.
+                </p>
+              </div>
+              <div class="p-4 rounded-xl bg-slate-50 border border-slate-200">
+                <div class="font-bold text-indigo-700 text-sm mb-1">3. EUAC vs. NPW</div>
+                <p class="text-xs text-slate-600 leading-relaxed">
+                  <strong>EUAC</strong> = Equivalent Uniform Annual Cost (your average yearly bill). <strong>NPW</strong> = Net Present Worth (total profit in today's dollars — if NPW &gt; 0, buy it!).
+                </p>
+              </div>
+            </div>
+          </div>
+
+          ${buildQuizHTML(
+            'q0',
+            'Quick check: In a Newnan factor like (A/P, 8%, 4), what are you trying to FIND?',
+            [
+              'The Annual amount (A) given a Present lump sum (P)',
+              'The Present lump sum (P) given an Annual amount (A)'
+            ],
+            0,
+            'Exactly! Always read the first letter before the slash as "Find" and the second letter as "Given". So (A/P) = Find Annual (A), Given Present (P).'
+          )}
+        </div>
+      `;
+    }
+
+    // =========================================================
+    // LESSON 1: Q1 ROBOT ECONOMIC LIFE
+    // =========================================================
+    function renderStep1() {
+      const row = Q1_DATA[state.q1Year - 1];
+      const capRec = 40000 * row.ap;
+      const svCredit = row.sv * row.af;
+      const netCap = capRec - svCredit;
+      const omGrad = 1500 * row.ag;
+      const totalOM = 2000 + omGrad;
+      const isBest = state.q1Year === 4;
+
+      return `
+        <div class="space-y-5">
+          <div class="bg-white rounded-2xl border border-slate-200 p-5 sm:p-6 shadow-sm">
+            <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
+              <span class="px-2.5 py-1 rounded-full bg-indigo-50 text-indigo-700 text-xs font-bold">Question 1 · Lecture 12</span>
+              <span class="px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 text-xs font-bold">Final Answer: 4 Years ($12,546.82/yr)</span>
+            </div>
+            <h2 class="text-xl font-extrabold text-slate-900">Robot's Economic Life & Minimum Annual Cost (EUAC)</h2>
+            <p class="mt-2 text-sm text-slate-600 leading-relaxed">
+              <strong>Real-World Analogy (Owning a Car):</strong> If you buy a $40,000 car and sell it after just 1 year, the upfront price hurts a lot. If you keep it for 10 years, repairs get crazy expensive ($2,000 in Yr 1, +$1,500 every year!). Where is the <strong>sweet spot</strong> year with the lowest average yearly cost?
+            </p>
+          </div>
+
+          <!-- Interactive Slider + Chart -->
+          <div class="bg-white rounded-2xl border border-slate-200 p-5 sm:p-6 shadow-sm">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+              <div>
+                <h3 class="text-sm font-bold text-slate-900">Interactive Sweet-Spot Finder</h3>
+                <p class="text-xs text-slate-500">Slide to test keeping the robot for 1 to 10 years and watch the math update live.</p>
+              </div>
+              <div class="flex items-center gap-3 bg-indigo-50 px-4 py-2 rounded-xl border border-indigo-100">
+                <label for="q1Slider" class="text-xs font-bold text-indigo-900">Keep for:</label>
+                <input id="q1Slider" type="range" min="1" max="10" value="${state.q1Year}" class="w-28 sm:w-36 accent-indigo-600 cursor-pointer" />
+                <span class="text-sm font-extrabold text-indigo-700 w-14 text-right">Year ${state.q1Year}</span>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-5 items-start">
+              <div class="relative h-60">
+                <canvas id="q1Chart"></canvas>
+              </div>
+
+              <!-- Step-by-step math breakdown -->
+              <div class="rounded-xl border ${isBest ? 'border-emerald-300 bg-emerald-50/50' : 'border-slate-200 bg-slate-50'} p-4 text-xs sm:text-sm space-y-2.5">
+                <div class="flex items-center justify-between">
+                  <span class="font-bold text-slate-900">Step-by-Step Math for n = ${state.q1Year}</span>
+                  ${isBest ? '<span class="px-2 py-0.5 rounded-full bg-emerald-600 text-white text-xs font-bold">LOWEST COST!</span>' : ''}
+                </div>
+                <div class="p-2.5 bg-white rounded-lg border border-slate-200 space-y-1.5 math-chip text-xs">
+                  <div><strong>1. Resale Value S<sub>${state.q1Year}</sub>:</strong> $40,000 &times; (0.80)<sup>${state.q1Year}</sup> = <strong>${fmtMoney(row.sv, 2)}</strong></div>
+                  <div><strong>2. Purchase Cost/yr:</strong> $40,000 &times; ${row.ap.toFixed(6)} = +${fmtMoney(capRec, 2)}</div>
+                  <div><strong>3. Resale Credit/yr:</strong> &minus;${fmtMoney(row.sv, 2)} &times; ${row.af.toFixed(6)} = &minus;${fmtMoney(svCredit, 2)}</div>
+                  <div class="text-slate-500 pl-3">&rarr; Net Ownership Cost = ${fmtMoney(netCap, 2)}/yr</div>
+                  <div><strong>4. Base + Growing O&amp;M:</strong> $2,000 + $1,500 &times; ${row.ag.toFixed(6)} = +${fmtMoney(totalOM, 2)}</div>
+                </div>
+                <div class="flex items-center justify-between pt-1 font-bold text-sm">
+                  <span class="text-slate-700">Total EUAC (Year ${state.q1Year}):</span>
+                  <span class="${isBest ? 'text-emerald-700' : 'text-indigo-700'} text-base">${fmtMoney(row.euac, 2)} / yr</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          ${buildQuizHTML(
+            'q1',
+            'Why does the EUAC curve go DOWN at first (Years 1 to 4) and then go UP after Year 4?',
+            [
+              'Spreading the $40,000 purchase over more years lowers ownership cost, until rising O&M repairs (+$1,500/yr) overpower the savings.',
+              'The interest rate changes from 8% to 12% after Year 4.'
+            ],
+            0,
+            'Yes! That tug-of-war between falling ownership cost and rising repair cost creates the classic U-shaped curve, bottoming out at Year 4 ($12,546.82/yr).'
+          )}
+        </div>
+      `;
+    }
+
+    function initStep1() {
+      const slider = document.getElementById('q1Slider');
+      if (slider) {
+        slider.addEventListener('input', (e) => {
+          state.q1Year = Number(e.target.value);
+          renderLesson();
+        });
+      }
+      const ctx = document.getElementById('q1Chart');
+      if (ctx) {
+        destroyChart();
+        activeChart = new Chart(ctx, {
+          type: 'line',
+          data: {
+            labels: Q1_DATA.map(d => 'Yr ' + d.n),
+            datasets: [{
+              label: 'Total EUAC ($/yr)',
+              data: Q1_DATA.map(d => d.euac),
+              borderColor: '#4f46e5',
+              backgroundColor: 'rgba(79,70,229,0.1)',
+              fill: true,
+              tension: 0.3,
+              pointRadius: Q1_DATA.map(d => d.n === state.q1Year ? 7 : (d.n === 4 ? 5 : 3)),
+              pointBackgroundColor: Q1_DATA.map(d => d.n === state.q1Year ? '#10b981' : (d.n === 4 ? '#f59e0b' : '#4f46e5'))
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { display: false },
+              tooltip: { callbacks: { label: c => fmtMoney(c.parsed.y, 2) + '/yr' } }
+            },
+            scales: {
+              y: {
+                min: 12300,
+                max: 13600,
+                ticks: { callback: v => '$' + (v / 1000).toFixed(1) + 'k' }
+              }
+            }
+          }
+        });
+      }
+    }
+
+    // =========================================================
+    // LESSON 2: Q2 CRANE REPLACEMENT
+    // =========================================================
+    function renderStep2() {
+      return `
+        <div class="space-y-5">
+          <div class="bg-white rounded-2xl border border-slate-200 p-5 sm:p-6 shadow-sm">
+            <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
+              <span class="px-2.5 py-1 rounded-full bg-indigo-50 text-indigo-700 text-xs font-bold">Question 2 · Lecture 12</span>
+              <span class="px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 text-xs font-bold">Final Answer: Replace at End of Year 3</span>
+            </div>
+            <h2 class="text-xl font-extrabold text-slate-900">Existing Crane Replacement (Marginal Cost)</h2>
+            <p class="mt-2 text-sm text-slate-600 leading-relaxed">
+              <strong>Real-World Analogy:</strong> You already own an old crane (the <em>Defender</em>). A brand-new crane (the <em>Challenger</em>) costs <strong>$38,000/yr</strong>. Each year, ask: <em>"Is keeping my old crane for ONE MORE YEAR cheaper than $38,000?"</em> The moment keeping it costs MORE than $38,000, swap it!
+            </p>
+          </div>
+
+          <!-- Sunk Cost Trap Banner -->
+          <div class="rounded-2xl border border-rose-200 bg-rose-50/70 p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div class="text-xs sm:text-sm text-rose-950">
+              <strong class="inline-flex items-center gap-1.5 text-rose-700"><i data-lucide="alert-triangle" class="w-4 h-4"></i> Exam Trap: The $180,000 Original Price!</strong>
+              <p class="mt-1">The problem tells you the crane originally cost $180,000. <strong>NEVER use $180,000 in your math!</strong> That is a <em>sunk cost</em> (money already spent in the past). Only today's resale value ($60,000) matters.</p>
+            </div>
+          </div>
+
+          <!-- Formula Box -->
+          <div class="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm">
+            <div class="text-xs font-bold uppercase text-indigo-700 mb-1.5">The 1-Year Marginal Cost Formula (Plain English)</div>
+            <div class="math-chip text-xs sm:text-sm bg-slate-900 text-emerald-300 px-4 py-3 rounded-xl overflow-x-auto">
+              MC<sub>t</sub> = MV<sub>t-1</sub>(1 + 0.12) &minus; MV<sub>t</sub> + O&amp;M<sub>t</sub>
+            </div>
+            <p class="text-xs text-slate-500 mt-2">
+              Translation: <strong>(What you'd have if you sold it now + 12% interest)</strong> &minus; <strong>(What you can sell it for next year)</strong> + <strong>(This year's repair bill)</strong>.
+            </p>
+
+            <!-- Interactive Year-by-Year Decision Game -->
+            <div class="mt-5 grid grid-cols-1 lg:grid-cols-2 gap-5 items-start">
+              <div class="space-y-2.5">
+                <div class="text-xs font-bold text-slate-700">Click "Keep" or "Replace" for each year to test your intuition:</div>
+                ${Q2_DATA.map(d => {
+                  const guess = state.q2Guesses[d.year];
+                  const isCorrect = guess === d.action;
+                  return `
+                    <div class="p-3 rounded-xl border border-slate-200 bg-slate-50 flex flex-col gap-2">
+                      <div class="flex items-center justify-between gap-2">
+                        <div>
+                          <span class="font-bold text-slate-900 text-sm">Year ${d.year}</span>
+                          <span class="math-chip text-xs text-slate-600 ml-2">${fmtMoney(d.mvPrev)}(1.12) &minus; ${fmtMoney(d.mvCurr)} + ${fmtMoney(d.om)} = <strong class="${d.mc > 38000 ? 'text-rose-600' : 'text-emerald-700'}">${fmtMoney(d.mc)}</strong></span>
+                        </div>
+                        <div class="flex gap-1.5 shrink-0">
+                          <button type="button" data-q2yr="${d.year}" data-choice="Keep" class="q2-btn px-2.5 py-1 rounded-lg text-xs font-bold border transition ${guess === 'Keep' ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-100'}">Keep</button>
+                          <button type="button" data-q2yr="${d.year}" data-choice="Replace" class="q2-btn px-2.5 py-1 rounded-lg text-xs font-bold border transition ${guess === 'Replace' ? 'bg-rose-600 text-white border-rose-600' : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-100'}">Replace</button>
+                        </div>
+                      </div>
+                      ${guess ? `
+                        <div class="text-xs px-2.5 py-1.5 rounded-lg ${isCorrect ? 'bg-emerald-100 text-emerald-900' : 'bg-amber-100 text-amber-900'}">
+                          <strong>${isCorrect ? 'Correct!' : 'Not quite:'}</strong> ${d.reason}
+                        </div>
+                      ` : ''}
+                    </div>
+                  `;
+                }).join('')}
+              </div>
+
+              <div class="relative h-72">
+                <canvas id="q2Chart"></canvas>
+              </div>
+            </div>
+          </div>
+
+          ${buildQuizHTML(
+            'q2',
+            'Since Year 4 Marginal Cost ($39,200) is the first year above $38,000, WHEN do we replace the crane?',
+            [
+              'At the END of Year 3 (right before Year 4 begins)',
+              'At the END of Year 4 (after paying $39,200)'
+            ],
+            0,
+            'Exactly! You want to avoid paying that expensive $39,200 in Year 4, so you swap the crane at the end of Year 3.'
+          )}
+        </div>
+      `;
+    }
+
+    function initStep2() {
+      document.querySelectorAll('.q2-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          state.q2Guesses[Number(btn.dataset.q2yr)] = btn.dataset.choice;
+          renderLesson();
+        });
+      });
+      const ctx = document.getElementById('q2Chart');
+      if (ctx) {
+        destroyChart();
+        activeChart = new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels: Q2_DATA.map(d => 'Year ' + d.year),
+            datasets: [
+              {
+                label: 'Old Crane Marginal Cost ($)',
+                data: Q2_DATA.map(d => d.mc),
+                backgroundColor: Q2_DATA.map(d => d.mc > 38000 ? '#f43f5e' : '#10b981'),
+                borderRadius: 6
+              },
+              {
+                type: 'line',
+                label: 'New Crane EUAC ($38,000)',
+                data: [38000, 38000, 38000, 38000, 38000],
+                borderColor: '#1e293b',
+                borderDash: [6, 4],
+                borderWidth: 2,
+                pointRadius: 0
+              }
+            ]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+              y: { min: 28000, max: 48000, ticks: { callback: v => '$' + (v / 1000) + 'k' } }
+            }
+          }
+        });
+      }
+    }
+
+    // =========================================================
+    // LESSON 3: Q3 REAL INTEREST RATE
+    // =========================================================
+    function renderStep3() {
+      const i = state.q3MarketRate / 100;
+      const f = state.q3Inflation / 100;
+      const exactReal = ((1 + i) / (1 + f) - 1) * 100;
+      const wrongApprox = state.q3MarketRate - state.q3Inflation;
+      const bankEnd = 100 * (1 + i);
+      const cartEnd = 100 * (1 + f);
+      const realCarts = bankEnd / cartEnd;
+
+      return `
+        <div class="space-y-5">
+          <div class="bg-white rounded-2xl border border-slate-200 p-5 sm:p-6 shadow-sm">
+            <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
+              <span class="px-2.5 py-1 rounded-full bg-indigo-50 text-indigo-700 text-xs font-bold">Question 3 · Lecture 13</span>
+              <span class="px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 text-xs font-bold">Final Answer: i' = 5.07%</span>
+            </div>
+            <h2 class="text-xl font-extrabold text-slate-900">Real Interest Rate (Stripping Out Inflation)</h2>
+            <p class="mt-2 text-sm text-slate-600 leading-relaxed">
+              <strong>Real-World Analogy (The Grocery Cart):</strong> You put <strong>$100</strong> in a bank paying <strong>7.75%</strong> interest, so next year you have <strong>$107.75</strong>. Meanwhile, <strong>2.55%</strong> inflation raises a $100 grocery cart to <strong>$102.55</strong>. How much <em>more groceries</em> can you actually buy? Divide $107.75 by $102.55 = <strong>1.0507 carts (+5.07%)</strong>!
+            </p>
+          </div>
+
+          <!-- Interactive Fisher Calculator -->
+          <div class="bg-white rounded-2xl border border-slate-200 p-5 sm:p-6 shadow-sm space-y-4">
+            <div class="flex items-center justify-between flex-wrap gap-2">
+              <h3 class="text-sm font-bold text-slate-900">Interactive Purchasing-Power Playground</h3>
+              <button id="q3ResetBtn" type="button" class="text-xs font-semibold text-indigo-600 hover:underline">Reset to HW5 Numbers (7.75% &amp; 2.55%)</button>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-200">
+                <div class="flex justify-between text-xs font-bold text-slate-700 mb-1.5">
+                  <span>Bank Market Rate (i)</span>
+                  <span class="text-indigo-700">${state.q3MarketRate.toFixed(2)}%</span>
+                </div>
+                <input id="q3iSlider" type="range" min="1" max="15" step="0.05" value="${state.q3MarketRate}" class="w-full accent-indigo-600" />
+              </div>
+              <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-200">
+                <div class="flex justify-between text-xs font-bold text-slate-700 mb-1.5">
+                  <span>Inflation Rate (f)</span>
+                  <span class="text-amber-700">${state.q3Inflation.toFixed(2)}%</span>
+                </div>
+                <input id="q3fSlider" type="range" min="0" max="10" step="0.05" value="${state.q3Inflation}" class="w-full accent-amber-600" />
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <div class="p-4 rounded-xl bg-slate-900 text-white">
+                <div class="text-xs text-slate-400">Exact Fisher Formula</div>
+                <div class="math-chip text-xs text-emerald-300 mt-1">i' = (1 + ${i.toFixed(4)}) / (1 + ${f.toFixed(4)}) &minus; 1</div>
+                <div class="text-2xl font-extrabold text-emerald-400 mt-2">${exactReal.toFixed(2)}%</div>
+                <div class="text-xs text-slate-400 mt-1">Exact real purchasing-power gain</div>
+              </div>
+              <div class="p-4 rounded-xl bg-slate-50 border border-slate-200">
+                <div class="text-xs font-bold text-slate-600">Grocery Cart Check ($100 start)</div>
+                <div class="text-xs text-slate-700 mt-2 space-y-1">
+                  <div>Bank balance: <strong>$${bankEnd.toFixed(2)}</strong></div>
+                  <div>Cart price: <strong>$${cartEnd.toFixed(2)}</strong></div>
+                  <div>Carts you can buy: <strong class="text-indigo-700">${realCarts.toFixed(4)}</strong></div>
+                </div>
+              </div>
+              <div class="p-4 rounded-xl bg-rose-50 border border-rose-200">
+                <div class="text-xs font-bold text-rose-800">Common Trap: Just Subtracting</div>
+                <div class="math-chip text-xs text-rose-700 mt-1">i &minus; f = ${wrongApprox.toFixed(2)}%</div>
+                <p class="text-xs text-rose-900 mt-2">Close, but slightly too high because inflation also shrinks the value of the interest you earned!</p>
+              </div>
+            </div>
+          </div>
+
+          ${buildQuizHTML(
+            'q3',
+            'Why do we divide (1 + i) by (1 + f) instead of just computing i − f?',
+            [
+              'Because inflation reduces the purchasing power of BOTH your original principal AND the interest you earned.',
+              'Because banks charge a 2.55% service fee every year.'
+            ],
+            0,
+            'Spot on! Dividing by (1 + f) properly removes inflation from both your principal and your interest.'
+          )}
+        </div>
+      `;
+    }
+
+    function initStep3() {
+      const iS = document.getElementById('q3iSlider');
+      const fS = document.getElementById('q3fSlider');
+      const rst = document.getElementById('q3ResetBtn');
+      if (iS) iS.addEventListener('input', e => { state.q3MarketRate = Number(e.target.value); renderLesson(); });
+      if (fS) fS.addEventListener('input', e => { state.q3Inflation = Number(e.target.value); renderLesson(); });
+      if (rst) rst.addEventListener('click', () => { state.q3MarketRate = 7.75; state.q3Inflation = 2.55; renderLesson(); });
+    }
+
+    // =========================================================
+    // LESSON 4: Q4 INFLATION + MACRS + AFTER-TAX NPW
+    // =========================================================
+    function renderStep4() {
+      const y = Q4_DATA[state.q4Year];
+      const taxable = y.t === 0 ? 0 : (y.actualB - y.macrsD);
+      const tax = y.t === 0 ? 0 : Math.round(taxable * 0.28);
+
+      return `
+        <div class="space-y-5">
+          <div class="bg-white rounded-2xl border border-slate-200 p-5 sm:p-6 shadow-sm">
+            <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
+              <span class="px-2.5 py-1 rounded-full bg-indigo-50 text-indigo-700 text-xs font-bold">Question 4 · Lectures 11 &amp; 13</span>
+              <span class="px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 text-xs font-bold">Final Answer: NPW = +$15,952.22 &rarr; BUY</span>
+            </div>
+            <h2 class="text-xl font-extrabold text-slate-900">Inflation + MACRS Tax Shield + After-Tax NPW</h2>
+            <p class="mt-2 text-sm text-slate-600 leading-relaxed">
+              This looks scary only because it combines <strong>5 tiny dominoes</strong>. Don't look at all 10 years at once—just follow <strong>ONE year</strong> through the 5 dominoes below!
+            </p>
+          </div>
+
+          <!-- 5 Dominoes Visual Pipeline -->
+          <div class="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm">
+            <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+              <h3 class="text-sm font-bold text-slate-900">Click Any Year (0 to 10) to Trace the 5 Dominoes</h3>
+              <span class="text-xs text-slate-500">Tax Rate T = 28% · Inflation f = 7% · Real MARR i' = 15%</span>
+            </div>
+
+            <div class="flex flex-wrap gap-1.5 mb-4">
+              ${Q4_DATA.map(d => `
+                <button type="button" data-q4yr="${d.t}" class="q4-yr-btn px-3 py-1.5 rounded-lg text-xs font-bold transition ${state.q4Year === d.t ? 'bg-indigo-600 text-white shadow-sm' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}">
+                  Yr ${d.t}
+                </button>
+              `).join('')}
+            </div>
+
+            ${y.t === 0 ? `
+              <div class="p-4 rounded-xl bg-slate-50 border border-slate-200 text-sm text-slate-700">
+                <strong>Year 0 (Today):</strong> You pay <strong>&minus;$10,000</strong> upfront to buy the research device. No inflation adjustment, no tax, and no discounting needed because it happens right now!
+              </div>
+            ` : `
+              <div class="grid grid-cols-1 sm:grid-cols-5 gap-2.5 text-xs">
+                <div class="p-3 rounded-xl bg-blue-50 border border-blue-200">
+                  <div class="font-bold text-blue-900 mb-1">1. Inflate (7%)</div>
+                  <div class="math-chip text-blue-800">${fmtMoney(y.baseB)} &times; 1.07<sup>${y.t}</sup></div>
+                  <div class="text-base font-extrabold text-blue-950 mt-1">${fmtMoney(y.actualB)}</div>
+                  <div class="text-blue-700 mt-0.5">Actual-dollar benefit</div>
+                </div>
+                <div class="p-3 rounded-xl bg-purple-50 border border-purple-200">
+                  <div class="font-bold text-purple-900 mb-1">2. MACRS Shield</div>
+                  <div class="math-chip text-purple-800">$10k &times; ${y.macrsPct}%</div>
+                  <div class="text-base font-extrabold text-purple-950 mt-1">${fmtMoney(y.macrsD)}</div>
+                  <div class="text-purple-700 mt-0.5">${y.macrsD > 0 ? 'Lowers taxable income!' : 'Fully depreciated'}</div>
+                </div>
+                <div class="p-3 rounded-xl bg-amber-50 border border-amber-200">
+                  <div class="font-bold text-amber-900 mb-1">3. After-Tax Cash</div>
+                  <div class="math-chip text-amber-800">Tax = 28%(${fmtMoney(taxable)}) = ${fmtMoney(tax)}</div>
+                  <div class="text-base font-extrabold text-amber-950 mt-1">${fmtMoney(y.actualATCF)}</div>
+                  <div class="text-amber-700 mt-0.5">Actual ATCF kept</div>
+                </div>
+                <div class="p-3 rounded-xl bg-teal-50 border border-teal-200">
+                  <div class="font-bold text-teal-900 mb-1">4. Deflate (7%)</div>
+                  <div class="math-chip text-teal-800">${fmtMoney(y.actualATCF)} / 1.07<sup>${y.t}</sup></div>
+                  <div class="text-base font-extrabold text-teal-950 mt-1">${fmtMoney(y.y0ATCF)}</div>
+                  <div class="text-teal-700 mt-0.5">Year-0 real dollars</div>
+                </div>
+                <div class="p-3 rounded-xl bg-emerald-50 border border-emerald-200">
+                  <div class="font-bold text-emerald-900 mb-1">5. Discount (15%)</div>
+                  <div class="math-chip text-emerald-800">/(1.15)<sup>${y.t}</sup></div>
+                  <div class="text-base font-extrabold text-emerald-950 mt-1">+${fmtMoney(y.pw)}</div>
+                  <div class="text-emerald-700 mt-0.5">Present Worth</div>
+                </div>
+              </div>
+            `}
+
+            <!-- Why the Last Answer flagged the assumption -->
+            <div class="mt-4 p-3.5 rounded-xl bg-amber-50 border border-amber-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div class="text-xs text-amber-950">
+                <strong>Why the Last Answer Added a Note Here:</strong> We assumed the stated benefits ($2,500, $3,750...) are in Year-0 dollars and inflate from Year 0 (giving <strong>+$15,952.22</strong>). Even if $2,500 were already Year-1 inflated, NPW is still <strong>+$14,361.49 &gt; 0</strong> (still BUY!).
+              </div>
+              <div class="shrink-0 text-right">
+                <div class="text-xs text-slate-500">Sum of All 10 Years PW &minus; $10k</div>
+                <div class="text-lg font-extrabold text-emerald-700">+$15,952.22</div>
+              </div>
+            </div>
+          </div>
+
+          ${buildQuizHTML(
+            'q4',
+            'Why does a 5-year MACRS schedule have depreciation in Year 6 (5.76%)?',
+            [
+              'Because of the IRS half-year convention: you get half a year of depreciation in Year 1 and the leftover half spills into Year 6.',
+              'Because inflation stretches the machine life by 1 extra year.'
+            ],
+            0,
+            'Correct! That half-year rule is why a 5-year MACRS property always has 6 rows of rates: 20%, 32%, 19.2%, 11.52%, 11.52%, 5.76%.'
+          )}
+        </div>
+      `;
+    }
+
+    function initStep4() {
+      document.querySelectorAll('.q4-yr-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          state.q4Year = Number(btn.dataset.q4yr);
+          renderLesson();
+        });
+      });
+    }
+
+    // =========================================================
+    // LESSON 5: Q5 CAPITAL BUDGETING ($1.8M)
+    // =========================================================
+    function renderStep5() {
+      const budget = 1800000;
+      let spent = 0;
+      Q5_PROJECTS.forEach(p => { if (state.q5Selected.has(p.id)) spent += p.cost; });
+      const remaining = budget - spent;
+      const overBudget = remaining < 0;
+
+      const excluded = Q5_PROJECTS.filter(p => !state.q5Selected.has(p.id));
+      const bestExcluded = excluded.length ? excluded.reduce((a, b) => a.irr > b.irr ? a : b) : null;
+
+      return `
+        <div class="space-y-5">
+          <div class="bg-white rounded-2xl border border-slate-200 p-5 sm:p-6 shadow-sm">
+            <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
+              <span class="px-2.5 py-1 rounded-full bg-indigo-50 text-indigo-700 text-xs font-bold">Question 5 · Capital Budgeting</span>
+              <span class="px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 text-xs font-bold">Fund D, G, E, F, C · Opp. Cost = 15.10%</span>
+            </div>
+            <h2 class="text-xl font-extrabold text-slate-900">Packing a $1,800,000 Budget by IRR</h2>
+            <p class="mt-2 text-sm text-slate-600 leading-relaxed">
+              <strong>Real-World Analogy (Shopping Cart):</strong> You have <strong>$1.8M</strong> to spend. First, rank all 9 projects from highest return (IRR) to lowest. Start tossing the best ones into your cart. When a pricey project (<strong>H, $600k</strong>) won't fit in your leftover $300k, skip it and grab <strong>C ($300k)</strong>. The return of the best project you had to leave behind (<strong>H at 15.10%</strong>) is your <strong>Opportunity Cost of Capital</strong>!
+            </p>
+          </div>
+
+          <!-- Interactive Budget Packer -->
+          <div class="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm space-y-4">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <div>
+                <h3 class="text-sm font-bold text-slate-900">Interactive $1.8M Budget Packer</h3>
+                <p class="text-xs text-slate-500">Click projects to add/remove them from your cart. Projects are sorted highest IRR first.</p>
+              </div>
+              <button id="q5ResetBtn" type="button" class="px-3 py-1.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-bold transition">
+                Auto-Fill HW5 Answer (D, G, E, F, C)
+              </button>
+            </div>
+
+            <!-- Budget Meter -->
+            <div class="p-3.5 rounded-xl ${overBudget ? 'bg-rose-50 border-rose-300' : 'bg-slate-50 border-slate-200'} border">
+              <div class="flex justify-between text-xs sm:text-sm font-bold mb-1.5">
+                <span class="${overBudget ? 'text-rose-700' : 'text-slate-800'}">Spent: ${fmtMoney(spent)} / $1,800,000</span>
+                <span class="${overBudget ? 'text-rose-700' : 'text-emerald-700'}">${overBudget ? 'OVER BUDGET by ' + fmtMoney(-remaining) : 'Remaining: ' + fmtMoney(remaining)}</span>
+              </div>
+              <div class="w-full h-2.5 bg-slate-200 rounded-full overflow-hidden">
+                <div class="h-full transition-all duration-300 ${overBudget ? 'bg-rose-500' : 'bg-emerald-500'}" style="width: ${Math.min(100, (spent / budget) * 100)}%"></div>
+              </div>
+              <div class="mt-2 text-xs text-slate-600">
+                Best Unfunded Project (Opportunity Cost):
+                <strong class="text-indigo-700">${bestExcluded ? `Project ${bestExcluded.id} (${bestExcluded.irr.toFixed(2)}%)` : 'None — all funded!'}</strong>
+              </div>
+            </div>
+
+            <!-- Project Cards -->
+            <div class="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+              ${Q5_PROJECTS.map((p, idx) => {
+                const picked = state.q5Selected.has(p.id);
+                return `
+                  <button type="button" data-proj="${p.id}" class="q5-card text-left p-3 rounded-xl border transition ${picked ? 'bg-emerald-50 border-emerald-400 ring-1 ring-emerald-400' : 'bg-white border-slate-200 hover:border-indigo-300'}">
+                    <div class="flex items-center justify-between">
+                      <span class="font-extrabold text-sm text-slate-900">#${idx + 1} Project ${p.id}</span>
+                      <span class="text-xs font-bold px-2 py-0.5 rounded-full ${picked ? 'bg-emerald-600 text-white' : 'bg-slate-100 text-slate-600'}">${picked ? 'Funded' : 'Skipped'}</span>
+                    </div>
+                    <div class="mt-1.5 flex items-baseline justify-between">
+                      <span class="math-chip text-xs text-slate-600">${fmtMoney(p.cost)}</span>
+                      <span class="text-sm font-bold text-indigo-700">${p.irr.toFixed(2)}% IRR</span>
+                    </div>
+                  </button>
+                `;
+              }).join('')}
+            </div>
+
+            <div class="p-3.5 rounded-xl bg-amber-50 border border-amber-200 text-xs text-amber-950">
+              <strong>What the Last Answer Flagged:</strong> Always write a 1-line caveat that simple IRR-ranking is a textbook heuristic—when projects have different costs and lives, maximizing total NPW at a known MARR (e.g., 10%) could select a slightly different mix (B, D, E, G, H).
+            </div>
+          </div>
+
+          ${buildQuizHTML(
+            'q5',
+            'Why did we skip Project H (15.10% IRR) and fund Project C (13.82% IRR) instead?',
+            [
+              'After funding D, G, E, and F ($1.5M), only $300k was left — H needed $600k, while C fit the $300k budget exactly.',
+              'Because Project H had a lower IRR than Project C.'
+            ],
+            0,
+            'Exactly! H had a higher IRR, which is why H (15.10%) becomes your highest excluded return (opportunity cost of capital).'
+          )}
+        </div>
+      `;
+    }
+
+    function initStep5() {
+      document.querySelectorAll('.q5-card').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const id = btn.dataset.proj;
+          if (state.q5Selected.has(id)) state.q5Selected.delete(id);
+          else state.q5Selected.add(id);
+          renderLesson();
+        });
+      });
+      const rst = document.getElementById('q5ResetBtn');
+      if (rst) {
+        rst.addEventListener('click', () => {
+          state.q5Selected = new Set(['D', 'G', 'E', 'F', 'C']);
+          renderLesson();
+        });
+      }
+    }
+
+    // =========================================================
+    // LESSON 6: Q6 UNIVERSITY WACC
+    // =========================================================
+    function renderStep6() {
+      const isInt = state.q6Mode === 'interest';
+      const endAmt = isInt ? 53.55 : 850.00;
+      const bondAmt = 300.00;
+      const total = endAmt + bondAmt;
+      const wacc = ((endAmt * 6.3 + bondAmt * 4.5) / total);
+
+      return `
+        <div class="space-y-5">
+          <div class="bg-white rounded-2xl border border-slate-200 p-5 sm:p-6 shadow-sm">
+            <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
+              <span class="px-2.5 py-1 rounded-full bg-indigo-50 text-indigo-700 text-xs font-bold">Question 6 · Cost of Capital</span>
+              <span class="px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 text-xs font-bold">WACC = 4.77% (or 5.83%)</span>
+            </div>
+            <h2 class="text-xl font-extrabold text-slate-900">University Weighted Average Cost of Capital (WACC)</h2>
+            <p class="mt-2 text-sm text-slate-600 leading-relaxed">
+              <strong>Real-World Analogy (Mixing Two Loans in a Blender):</strong> WACC is just a weighted average interest rate. Notice the <strong>rule trap</strong>: General taxpayer funds ($120M at 13%) are <strong>EXCLUDED</strong> because the problem states capital projects can ONLY use new bonds or endowment interest!
+            </p>
+          </div>
+
+          <!-- Interactive Assumption Switcher -->
+          <div class="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm space-y-4">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <h3 class="text-sm font-bold text-slate-900">Why the Last Answer Showed TWO Numbers (4.77% vs 5.83%)</h3>
+                <p class="text-xs text-slate-500">Toggle between the two ways of weighting the endowment so you can state your assumption clearly!</p>
+              </div>
+              <div class="inline-flex rounded-xl bg-slate-100 p-1 shrink-0">
+                <button id="q6IntBtn" type="button" class="px-3 py-1.5 rounded-lg text-xs font-bold transition ${isInt ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-600 hover:text-slate-900'}">
+                  Available Funding (4.77%)
+                </button>
+                <button id="q6PrinBtn" type="button" class="px-3 py-1.5 rounded-lg text-xs font-bold transition ${!isInt ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-600 hover:text-slate-900'}">
+                  Capital Structure (5.83%)
+                </button>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <div class="p-4 rounded-xl bg-indigo-50 border border-indigo-200">
+                <div class="text-xs font-bold text-indigo-800">Endowment Source (6.3%)</div>
+                <div class="text-xl font-extrabold text-indigo-950 mt-1">$${endAmt.toFixed(2)}M</div>
+                <div class="text-xs text-indigo-700 mt-1">${isInt ? 'Annual interest = 6.3% × $850M' : 'Full endowment principal'}</div>
+              </div>
+              <div class="p-4 rounded-xl bg-teal-50 border border-teal-200">
+                <div class="text-xs font-bold text-teal-800">Bonds Source (4.5%)</div>
+                <div class="text-xl font-extrabold text-teal-950 mt-1">$300.00M</div>
+                <div class="text-xs text-teal-700 mt-1">Included in capital projects</div>
+              </div>
+              <div class="p-4 rounded-xl bg-rose-50 border border-rose-200 opacity-75">
+                <div class="text-xs font-bold text-rose-800 line-through">Taxpayer Funds (13%)</div>
+                <div class="text-xl font-extrabold text-rose-900 mt-1 line-through">$120.00M</div>
+                <div class="text-xs text-rose-700 mt-1">Excluded by university rule!</div>
+              </div>
+            </div>
+
+            <div class="p-4 rounded-xl bg-slate-900 text-white math-chip text-xs sm:text-sm space-y-1.5">
+              <div class="text-slate-400">Step-by-Step Substitution:</div>
+              <div>WACC = [ (${endAmt.toFixed(2)} &times; 6.3%) + (300 &times; 4.5%) ] / (${endAmt.toFixed(2)} + 300)</div>
+              <div>WACC = [ ${(endAmt * 0.063).toFixed(5)} + 13.50 ] / ${total.toFixed(2)} = <span class="text-emerald-400 font-extrabold text-base">${wacc.toFixed(2)}%</span></div>
+            </div>
+          </div>
+
+          ${buildQuizHTML(
+            'q6',
+            'Why did we leave the $120M general taxpayer funds (at 13%) completely out of the WACC formula?',
+            [
+              'Because the university cannot use taxpayer funds for capital projects — only new bonds or endowment interest.',
+              'Because 13% is too high to put in a weighted average.'
+            ],
+            0,
+            'Right! Only financing sources actually eligible to fund the project belong in WACC.'
+          )}
+        </div>
+      `;
+    }
+
+    function initStep6() {
+      const b1 = document.getElementById('q6IntBtn');
+      const b2 = document.getElementById('q6PrinBtn');
+      if (b1) b1.addEventListener('click', () => { state.q6Mode = 'interest'; renderLesson(); });
+      if (b2) b2.addEventListener('click', () => { state.q6Mode = 'principal'; renderLesson(); });
+    }
+
+    // =========================================================
+    // LESSON 7: Q7 INCREMENTAL B/C RATIO
+    // =========================================================
+    function renderStep7() {
+      const r1 = state.q7Round === 1;
+      return `
+        <div class="space-y-5">
+          <div class="bg-white rounded-2xl border border-slate-200 p-5 sm:p-6 shadow-sm">
+            <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
+              <span class="px-2.5 py-1 rounded-full bg-indigo-50 text-indigo-700 text-xs font-bold">Question 7 · Incremental B/C</span>
+              <span class="px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 text-xs font-bold">Final Answer: Select Alternative A</span>
+            </div>
+            <h2 class="text-xl font-extrabold text-slate-900">Incremental Benefit/Cost Ratio (&Delta;B/C) Tournament</h2>
+            <p class="mt-2 text-sm text-slate-600 leading-relaxed">
+              <strong>The #1 Trap:</strong> Alternative B has the highest individual B/C ratio (<strong>1.238</strong>), yet <strong>Alternative A wins!</strong> Why? When options are mutually exclusive (you can only pick ONE), sort them from cheapest to most expensive (<strong>B &rarr; A &rarr; C</strong>) and ask: <em>"Is the EXTRA cost of upgrading worth the EXTRA benefit?"</em> If &Delta;B/C &ge; 1.0, take the upgrade!
+            </p>
+          </div>
+
+          <!-- Tournament Bracket Stepper -->
+          <div class="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm space-y-4">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <h3 class="text-sm font-bold text-slate-900">2-Round Upgrade Tournament (MARR = 10%, n = 10, A/P = 0.162745)</h3>
+              <div class="inline-flex rounded-xl bg-slate-100 p-1">
+                <button id="q7R1Btn" type="button" class="px-3 py-1.5 rounded-lg text-xs font-bold transition ${r1 ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-600'}">Round 1: B &rarr; A</button>
+                <button id="q7R2Btn" type="button" class="px-3 py-1.5 rounded-lg text-xs font-bold transition ${!r1 ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-600'}">Round 2: A &rarr; C</button>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-5 items-start">
+              ${r1 ? `
+                <div class="p-4 rounded-xl bg-emerald-50/70 border border-emerald-200 space-y-2.5 text-xs sm:text-sm">
+                  <div class="font-bold text-emerald-900">Round 1: Should we upgrade from B ($100k) to A ($180k)?</div>
+                  <div class="math-chip text-xs bg-white p-3 rounded-lg border border-emerald-200 space-y-1">
+                    <div>&Delta;Benefit = $53,000 &minus; $35,000 = <strong>+$18,000/yr</strong></div>
+                    <div>&Delta;Cost = ($80,000)(0.162745) + $4,000 = <strong>$17,019.63/yr</strong></div>
+                    <div class="pt-1 border-t border-slate-200">&Delta;B/C = $18,000 / $17,019.63 = <strong class="text-emerald-700 text-sm">1.058 &ge; 1.0</strong></div>
+                  </div>
+                  <p class="text-emerald-950"><strong>Verdict: YES!</strong> Every extra $1 spent upgrading from B to A brings back $1.06. <strong>A knocks out B!</strong></p>
+                </div>
+              ` : `
+                <div class="p-4 rounded-xl bg-rose-50/70 border border-rose-200 space-y-2.5 text-xs sm:text-sm">
+                  <div class="font-bold text-rose-900">Round 2: Should we upgrade from A ($180k) to C ($280k)?</div>
+                  <div class="math-chip text-xs bg-white p-3 rounded-lg border border-rose-200 space-y-1">
+                    <div>&Delta;Benefit = $77,000 &minus; $53,000 = <strong>+$24,000/yr</strong></div>
+                    <div>&Delta;Cost = ($100,000)(0.162745) + $12,000 = <strong>$28,274.54/yr</strong></div>
+                    <div class="pt-1 border-t border-slate-200">&Delta;B/C = $24,000 / $28,274.54 = <strong class="text-rose-700 text-sm">0.849 &lt; 1.0</strong></div>
+                  </div>
+                  <p class="text-rose-950"><strong>Verdict: NO!</strong> Every extra $1 spent upgrading to C only returns $0.85. Reject C — <strong>Alternative A is the Champion!</strong></p>
+                </div>
+              `}
+
+              <div>
+                <div class="text-xs font-bold text-slate-600 mb-2">NPW Proof (Confirms Alternative A Makes the Most Total Profit):</div>
+                <div class="relative h-48">
+                  <canvas id="q7Chart"></canvas>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          ${buildQuizHTML(
+            'q7',
+            'Why is it a mistake to just pick Alternative B because its individual B/C ratio (1.238) is the highest?',
+            [
+              'Because B/C ratio measures return per dollar, not total profit — upgrading to A adds $18,000/yr in benefit for only $17,020/yr in extra cost, increasing total NPW from $41,325 to $47,349.',
+              'Because Alternative B has a negative NPW.'
+            ],
+            0,
+            'Exactly! Think of it like choosing between earning 24% on $100 vs. earning 17% on $180 — the bigger investment still makes more total dollars!'
+          )}
+        </div>
+      `;
+    }
+
+    function initStep7() {
+      const r1 = document.getElementById('q7R1Btn');
+      const r2 = document.getElementById('q7R2Btn');
+      if (r1) r1.addEventListener('click', () => { state.q7Round = 1; renderLesson(); });
+      if (r2) r2.addEventListener('click', () => { state.q7Round = 2; renderLesson(); });
+
+      const ctx = document.getElementById('q7Chart');
+      if (ctx) {
+        destroyChart();
+        activeChart = new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels: ['Alt B (B/C 1.238)', 'Alt A (WINNER)', 'Alt C (B/C 1.047)'],
+            datasets: [{
+              label: 'Net Present Worth ($)',
+              data: [41325.04, 47348.98, 21083.79],
+              backgroundColor: ['#94a3b8', '#10b981', '#cbd5e1'],
+              borderRadius: 6
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+              y: { beginAtZero: true, ticks: { callback: v => '$' + (v / 1000) + 'k' } }
+            }
+          }
+        });
+      }
+    }
+
+    // =========================================================
+    // LESSON 8: Q8 FINANCIAL RATIOS
+    // =========================================================
+    function renderStep8() {
+      const isQuick = state.q8Mode === 'quick';
+      return `
+        <div class="space-y-5">
+          <div class="bg-white rounded-2xl border border-slate-200 p-5 sm:p-6 shadow-sm">
+            <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
+              <span class="px-2.5 py-1 rounded-full bg-indigo-50 text-indigo-700 text-xs font-bold">Question 8 · Financial Ratios</span>
+              <span class="px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 text-xs font-bold">Current 1.61 | Quick 1.28 | WC $132k</span>
+            </div>
+            <h2 class="text-xl font-extrabold text-slate-900">Current Ratio, Quick Ratio &amp; Working Capital</h2>
+            <p class="mt-2 text-sm text-slate-600 leading-relaxed">
+              <strong>Real-World Analogy (Paying Next Month's Bills):</strong> Imagine all your short-term bills (<strong>$215,000</strong>) came due soon. <strong>Current Ratio</strong> counts all short-term stuff you own ($347,000). <strong>Quick Ratio</strong> is stricter: it drops spare parts (Inventory) and Prepaid Expenses because you can't hand a landlord spare machine parts!
+            </p>
+          </div>
+
+          <!-- Interactive Account Filter -->
+          <div class="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm space-y-4">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <h3 class="text-sm font-bold text-slate-900">See Which Accounts Count in Current vs. Quick Ratio</h3>
+              <div class="inline-flex rounded-xl bg-slate-100 p-1">
+                <button id="q8CurrBtn" type="button" class="px-3 py-1.5 rounded-lg text-xs font-bold transition ${!isQuick ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-600'}">Current Ratio (All CA)</button>
+                <button id="q8QuickBtn" type="button" class="px-3 py-1.5 rounded-lg text-xs font-bold transition ${isQuick ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-600'}">Quick Ratio (Drop Inv &amp; Prepaid)</button>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div class="space-y-2">
+                <div class="text-xs font-bold uppercase text-emerald-700">Current Assets (Total = $347,000)</div>
+                ${Q8_ITEMS.filter(i => i.type === 'CA').map(item => {
+                  const excludedNow = isQuick && !item.quick;
+                  return `
+                    <div class="p-3 rounded-xl border text-xs transition ${excludedNow ? 'bg-slate-50 border-dashed border-slate-300 opacity-50' : 'bg-emerald-50/50 border-emerald-200'}">
+                      <div class="flex justify-between font-bold text-slate-900">
+                        <span class="${excludedNow ? 'line-through' : ''}">${item.name}</span>
+                        <span>${fmtMoney(item.amount)}</span>
+                      </div>
+                      <div class="text-slate-600 mt-0.5">${item.note}</div>
+                    </div>
+                  `;
+                }).join('')}
+              </div>
+
+              <div class="space-y-4">
+                <div class="space-y-2">
+                  <div class="text-xs font-bold uppercase text-rose-700">Current Liabilities (Total = $215,000)</div>
+                  ${Q8_ITEMS.filter(i => i.type === 'CL').map(item => `
+                    <div class="p-3 rounded-xl border bg-rose-50/50 border-rose-200 text-xs">
+                      <div class="flex justify-between font-bold text-slate-900">
+                        <span>${item.name}</span>
+                        <span>${fmtMoney(item.amount)}</span>
+                      </div>
+                      <div class="text-slate-600 mt-0.5">${item.note}</div>
+                    </div>
+                  `).join('')}
+                </div>
+
+                <!-- Final 3 Results Box -->
+                <div class="p-4 rounded-xl bg-slate-900 text-white space-y-2 math-chip text-xs">
+                  <div class="flex justify-between items-center">
+                    <span class="text-slate-300">(a) Current Ratio = 347k / 215k</span>
+                    <strong class="text-emerald-400 text-sm">1.61 : 1</strong>
+                  </div>
+                  <div class="flex justify-between items-center">
+                    <span class="text-slate-300">(b) Quick Ratio = 275k / 215k</span>
+                    <strong class="text-emerald-400 text-sm">1.28 : 1</strong>
+                  </div>
+                  <div class="flex justify-between items-center pt-1.5 border-t border-slate-700">
+                    <span class="text-slate-300">(c) Working Capital = 347k &minus; 215k</span>
+                    <strong class="text-amber-300 text-sm">$132,000</strong>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          ${buildQuizHTML(
+            'q8',
+            'Which two Current Assets do we subtract out to get the Quick Ratio?',
+            [
+              'Parts Inventory ($42,000) and Prepaid Expenses ($30,000)',
+              'Accounts Receivable ($120,000) and Marketable Securities ($75,000)'
+            ],
+            0,
+            'Spot on! Inventory and Prepaid Expenses cannot be converted into instant cash to pay immediate bills, leaving $275,000 in Quick Assets.'
+          )}
+        </div>
+      `;
+    }
+
+    function initStep8() {
+      const cBtn = document.getElementById('q8CurrBtn');
+      const qBtn = document.getElementById('q8QuickBtn');
+      if (cBtn) cBtn.addEventListener('click', () => { state.q8Mode = 'current'; renderLesson(); });
+      if (qBtn) qBtn.addEventListener('click', () => { state.q8Mode = 'quick'; renderLesson(); });
+    }
+
+    // =========================================================
+    // MASTER RENDERER
+    // =========================================================
+    function renderLesson() {
+      destroyChart();
+      const container = document.getElementById('lessonContainer');
+      const renderers = [
+        renderStep0, renderStep1, renderStep2, renderStep3,
+        renderStep4, renderStep5, renderStep6, renderStep7, renderStep8
+      ];
+      container.innerHTML = renderers[state.activeStep]();
+      bindQuizListeners();
+
+      const inits = [null, initStep1, initStep2, initStep3, initStep4, initStep5, initStep6, initStep7, initStep8];
+      if (inits[state.activeStep]) inits[state.activeStep]();
+      if (window.lucide) window.lucide.createIcons();
+    }
+
+    function renderAll() {
+      renderHeader();
+      renderLesson();
+    }
+
+    // =========================================================
+    // GLOBAL BUTTONS & MODAL
+    // =========================================================
+    document.getElementById('prevBtn').addEventListener('click', () => {
+      if (state.activeStep > 0) {
+        state.activeStep--;
+        renderAll();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    });
+
+    document.getElementById('nextBtn').addEventListener('click', () => {
+      if (state.activeStep < LESSONS.length - 1) {
+        state.activeStep++;
+        renderAll();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    });
+
+    document.getElementById('markCompleteBtn').addEventListener('click', () => {
+      if (state.completed.has(state.activeStep)) {
+        state.completed.delete(state.activeStep);
+      } else {
+        state.completed.add(state.activeStep);
+      }
+      saveProgress();
+      renderHeader();
+      if (window.lucide) window.lucide.createIcons();
+    });
+
+    const modal = document.getElementById('cheatSheetModal');
+    document.getElementById('openCheatSheetBtn').addEventListener('click', () => {
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+      if (window.lucide) window.lucide.createIcons();
+    });
+    document.getElementById('closeCheatSheetBtn').addEventListener('click', () => {
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    });
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+      }
+    });
+
+    // Initial boot
+    renderAll();
+  </script>
+</body>
+</html>
