@@ -17,3 +17,17 @@ Self-contained, step-by-step interactive learning interface for **IE 5324 (Advan
 ## View Live on GitHub Pages
 1. Upload `index.html` and `README.md` to your repository root (or push via Git).
 2. In GitHub, go to **Settings → Pages → Source: Deploy from a branch (`main` / `/ (root)`)** and click **Save**.
+
+## Styling (Tailwind CSS)
+The page loads a pre-built, minified `tailwind.css` instead of the Tailwind CDN
+script, which is not meant for production use. `tailwind.css` is committed, so
+GitHub Pages needs no build step.
+
+If you edit the classes in `index.html`, rebuild the stylesheet:
+
+```bash
+npm install          # once
+npm run build:css    # regenerates tailwind.css
+```
+
+Then commit the updated `tailwind.css` along with `index.html`.

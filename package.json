@@ -1,0 +1,13 @@
+{
+  "name": "engineering-economics",
+  "private": true,
+  "version": "1.0.0",
+  "description": "IE 5324 Homework 5 interactive learning studio",
+  "scripts": {
+    "build:css": "tailwindcss -i ./src/input.css -o ./tailwind.css --minify",
+    "watch:css": "tailwindcss -i ./src/input.css -o ./tailwind.css --watch"
+  },
+  "devDependencies": {
+    "tailwindcss": "^3.4.17"
+  }
+}
